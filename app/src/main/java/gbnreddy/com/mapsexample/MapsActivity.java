@@ -30,7 +30,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        latLng = new LatLng(17.5, 78.3);
+        latLng = new LatLng(17.519732, 78.384766);
         LocationManager manager = (LocationManager) getSystemService(LOCATION_SERVICE);
 
         if (manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
