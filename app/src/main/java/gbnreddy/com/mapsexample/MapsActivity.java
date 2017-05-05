@@ -3,6 +3,7 @@ package gbnreddy.com.mapsexample;
 import android.Manifest;
 import android.content.pm.PackageManager;
 import android.graphics.Color;
+import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -24,8 +25,13 @@ import com.google.android.gms.maps.model.MarkerOptions;
 
 public class MapsActivity extends FragmentActivity implements OnMapReadyCallback, LocationSource.OnLocationChangedListener {
 
+    Double lat1 = 17.451448;
+    Double lon1 = 78.379281;
+    Double lat2 = 17.499050;
+    Double lon2 = 78.389796;
     private GoogleMap mMap;
     private LatLng latLng;
+    private Circle circle;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,37 +42,35 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
         latLng = new LatLng(17.519732, 78.384766);
+        Criteria crit = new Criteria();
+        crit.setAccuracy(Criteria.ACCURACY_FINE);
+        crit.setPowerRequirement(Criteria.POWER_LOW);
         LocationManager manager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        String provider = manager.getBestProvider(crit, true);
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            // TODO: Consider calling
+            //    ActivityCompat#requestPermissions
+            // here to request the missing permissions, and then overriding
+            //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+            //                                          int[] grantResults)
+            // to handle the case where the user grants the permission. See the documentation
+            // for ActivityCompat#requestPermissions for more details.
+            return;
+        }
+        Location location = manager.getLastKnownLocation(provider);
+        latLng=new LatLng(location.getLatitude(),location.getLongitude());
+        manager.requestLocationUpdates(provider,5,5, (LocationListener) this);
+        /*if (manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
 
-        if (manager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                return;
-            }
             manager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5, 5, (LocationListener) this);
             Location location = manager.getLastKnownLocation(LocationManager.GPS_PROVIDER);
             latLng = new LatLng(location.getLatitude(), location.getLongitude());
         } else if (manager.isProviderEnabled(LocationManager.NETWORK_PROVIDER)) {
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                // TODO: Consider calling
-                //    ActivityCompat#requestPermissions
-                // here to request the missing permissions, and then overriding
-                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
-                //                                          int[] grantResults)
-                // to handle the case where the user grants the permission. See the documentation
-                // for ActivityCompat#requestPermissions for more details.
-                return;
-            }
+
             manager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 5, 5, (LocationListener) this);
             Location location = manager.getLastKnownLocation(LocationManager.NETWORK_PROVIDER);
             latLng = new LatLng(location.getLatitude(), location.getLongitude());
-        }
+        }*/
     }
 
 
@@ -82,19 +86,70 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-
         // Add a marker in Sydney and move the camera
-        Double lat1 = 17.451448;
-        Double lon1=78.379281;
-        Double lat2 = 17.4;
-        Double lon2=78.3;
+
         mMap.addMarker(new MarkerOptions().position(latLng).title("Marker in circle")/*.icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher))*/
                 .anchor(0.0f, 1.0f));
 
         mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
-        Circle circle = mMap.addCircle(new CircleOptions()
-                .center(latLng)
-                .radius(10000)
+
+        addCircle(latLng);
+
+
+        MarkerOptions markerOptions1 = new MarkerOptions().position(new LatLng(lat1, lon1))/*.title("test marker").icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher))*/
+                .anchor(0.0f, 1.0f);
+        if (checkMarker(circle, new LatLng(lat1, lon1))) {
+            markerOptions1.title("marker1 inside circle");
+        } else {
+            markerOptions1.title("marker1 outside of circle");
+        }
+
+        mMap.addMarker(markerOptions1);
+
+
+        MarkerOptions markerOptions2 = new MarkerOptions().position(new LatLng(lat2, lon2))/*.title("test marker").icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher))*/
+                .anchor(0.0f, 1.0f);
+        if (checkMarker(circle, new LatLng(lat2, lon2))) {
+            markerOptions2.title("marker2 inside circle");
+        } else {
+            markerOptions2.title("marker2 outside of circle");
+        }
+
+        mMap.addMarker(markerOptions2);
+        //mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
+    }
+
+    @Override
+    public void onLocationChanged(Location location) {
+        mMap.clear();
+        latLng = new LatLng(location.getLatitude(), location.getLongitude());
+        MarkerOptions markerOptions1 = new MarkerOptions().position(new LatLng(lat1, lon1))/*.title("test marker").icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher))*/
+                .anchor(0.0f, 1.0f);
+        if (checkMarker(circle, new LatLng(lat1, lon1))) {
+            markerOptions1.title("marker1 inside circle");
+        } else {
+            markerOptions1.title("marker1 outside of circle");
+        }
+
+        mMap.addMarker(markerOptions1);
+
+
+        MarkerOptions markerOptions2 = new MarkerOptions().position(new LatLng(lat2, lon2))/*.title("test marker").icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher))*/
+                .anchor(0.0f, 1.0f);
+        if (checkMarker(circle, new LatLng(lat2, lon2))) {
+            markerOptions2.title("marker2 inside circle");
+        } else {
+            markerOptions2.title("marker2 outside of circle");
+        }
+
+        mMap.addMarker(markerOptions2);
+
+    }
+
+    public void addCircle(LatLng laLn) {
+        circle = mMap.addCircle(new CircleOptions()
+                .center(laLn)
+                .radius(2500)
                 // Radius of the circle
 
 
@@ -107,43 +162,18 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                 // Border width of the circle
                 .strokeWidth(2));
+
+    }
+
+    public boolean checkMarker(Circle c, LatLng laln) {
         float[] distance = new float[2];
-
-    Location.distanceBetween(lat1, lon1,
-            circle.getCenter().latitude, circle.getCenter().longitude, distance);
-    MarkerOptions markerOptions1 = new MarkerOptions().position(new LatLng(lat1, lon1))/*.title("test marker").icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher))*/
-            .anchor(0.0f, 1.0f).draggable(true);
-    if (distance[0] > circle.getRadius()) {
-        Toast.makeText(this, " marker 1 Outside", Toast.LENGTH_LONG).show();
-        markerOptions1.title(" marker1 outside");
-    } else {
-        Toast.makeText(this, "marker 1 Inside", Toast.LENGTH_LONG).show();
-        markerOptions1.title("marker1 inside");
-    }
-
-        mMap.addMarker(markerOptions1);
-
-
-
-
-        Location.distanceBetween(lat2, lon2,
+        Location.distanceBetween(laln.latitude, laln.longitude,
                 circle.getCenter().latitude, circle.getCenter().longitude, distance);
-        MarkerOptions markerOptions2 = new MarkerOptions().position(new LatLng(lat2, lon2))/*.title("test marker").icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher))*/
-                .anchor(0.0f, 1.0f).draggable(true);
         if (distance[0] > circle.getRadius()) {
-            Toast.makeText(this, "marker 2 Outside", Toast.LENGTH_LONG).show();
-            markerOptions2.title(" marker2 outside");
+            return false;
         } else {
-            Toast.makeText(this, "marker 2 Inside", Toast.LENGTH_LONG).show();
-            markerOptions2.title("marker2 inside");
+            return true;
         }
-
-        mMap.addMarker(markerOptions2);
-        //mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
     }
 
-    @Override
-    public void onLocationChanged(Location location) {
-        latLng = new LatLng(location.getLatitude(), location.getLongitude());
-    }
 }
