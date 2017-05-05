@@ -84,12 +84,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
 
         // Add a marker in Sydney and move the camera
-        Double lat = 17.451448;
-        Double lon=78.379281;
+        Double lat1 = 17.451448;
+        Double lon1=78.379281;
+        Double lat2 = 17.4;
+        Double lon2=78.3;
         mMap.addMarker(new MarkerOptions().position(latLng).title("Marker in circle")/*.icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher))*/
                 .anchor(0.0f, 1.0f));
-        mMap.addMarker(new MarkerOptions().position(new LatLng(lat, lon)).title("test marker")/*.icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher))*/
-                .anchor(0.0f, 1.0f));
+
         mMap.moveCamera(CameraUpdateFactory.newLatLng(latLng));
         Circle circle = mMap.addCircle(new CircleOptions()
                 .center(latLng)
@@ -108,14 +109,36 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 .strokeWidth(2));
         float[] distance = new float[2];
 
-        Location.distanceBetween(lat, lon,
-                circle.getCenter().latitude, circle.getCenter().longitude, distance);
+    Location.distanceBetween(lat1, lon1,
+            circle.getCenter().latitude, circle.getCenter().longitude, distance);
+    MarkerOptions markerOptions1 = new MarkerOptions().position(new LatLng(lat1, lon1))/*.title("test marker").icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher))*/
+            .anchor(0.0f, 1.0f).draggable(true);
+    if (distance[0] > circle.getRadius()) {
+        Toast.makeText(this, " marker 1 Outside", Toast.LENGTH_LONG).show();
+        markerOptions1.title(" marker1 outside");
+    } else {
+        Toast.makeText(this, "marker 1 Inside", Toast.LENGTH_LONG).show();
+        markerOptions1.title("marker1 inside");
+    }
 
+        mMap.addMarker(markerOptions1);
+
+
+
+
+        Location.distanceBetween(lat2, lon2,
+                circle.getCenter().latitude, circle.getCenter().longitude, distance);
+        MarkerOptions markerOptions2 = new MarkerOptions().position(new LatLng(lat2, lon2))/*.title("test marker").icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_launcher))*/
+                .anchor(0.0f, 1.0f).draggable(true);
         if (distance[0] > circle.getRadius()) {
-            Toast.makeText(this, "Outside", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "marker 2 Outside", Toast.LENGTH_LONG).show();
+            markerOptions2.title(" marker2 outside");
         } else {
-            Toast.makeText(this, "Inside", Toast.LENGTH_LONG).show();
+            Toast.makeText(this, "marker 2 Inside", Toast.LENGTH_LONG).show();
+            markerOptions2.title("marker2 inside");
         }
+
+        mMap.addMarker(markerOptions2);
         //mMap.setMapType(GoogleMap.MAP_TYPE_HYBRID);
     }
 
